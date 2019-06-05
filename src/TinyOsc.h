@@ -23,6 +23,8 @@
 #include <stdint.h>
 
 
+#define OSC_RECEIVE_BUFFER_SIZE 256
+#define OSC_SEND_BUFFER_SIZE 256
 
 /*
 #ifdef __cplusplus
@@ -45,8 +47,10 @@ typedef struct tosc_bundle {
 } tosc_bundle;
 
 
-class TinyOsc
-{
+
+
+
+class TinyOsc {
 	 public:
 	 	typedef void (*tOscCallbackFunction)(void);
 
@@ -63,15 +67,22 @@ class TinyOsc
     TinyOsc();
 
  /**
- * Parse a buffer containing an OSC message or OSC bundle.
- * The contents of the buffer are NOT copied.
- * Calls the callback for every message received in a bundle or not.
+ * Parse a SLIP stream.
+ * Calls the callback for every message received.
+ * Bundles are unpacked into individual messages.
  */
-void parse(char *buffer, const int len, tOscCallbackFunction callback );
+void parseSlip( Stream& stream, tOscCallbackFunction callback );
+
+/**
+ * Writes an OSC packet to a SLIP stream. 
+ */
+uint32_t writeSlip(Stream& stream, const char *address,
+    const char *fmt, ...);
+
+
+
 
  private:
-     	char *buffer;
-     	//int len;
      	tosc_bundle bundle;
      	tosc_bundle* b;
      	tosc_message* o;
@@ -80,17 +91,22 @@ void parse(char *buffer, const int len, tOscCallbackFunction callback );
      	uint64_t timetag;
      	bool isPartOfABundle;
 
+     	char inputBuffer[OSC_RECEIVE_BUFFER_SIZE];
+     	char outputBuffer[OSC_SEND_BUFFER_SIZE];
 
 uint64_t parseBundleTimeTag();
 
-void parseBundle(char *buffer, const int len);
+
+ 
+
+void parseBundle();
 
  /**
  * Parse a buffer containing an OSC message.
  * The contents of the buffer are NOT copied.
  * Returns 0 if there is no error. An error code (a negative number) otherwise.
  */
-int parseMessage(char *buffer, const int len);
+int parseMessage();
 
 /**
  * Resets the read head to the first element.
@@ -103,7 +119,7 @@ void reset();
 /**
  * Returns true if the message is a bundle. False otherwise.
  */
-bool isABundle(const char *buffer);
+bool isABundle();
 
 
 /**
@@ -114,12 +130,15 @@ bool getNextMessage();
 
 
 
+
+
 public:
 
+// BUNDLES ARE PARSED AS INDIVIDUAL MESSAGES
 /**
  * Returns true if the message was part of a bundle. False otherwise.
  */
-bool isBundled();
+// bool isBundled();
 
 
 // TIMETAGS ARE NOT SUPPORTED YET
@@ -221,12 +240,15 @@ unsigned char* getNextMidi();
 
 
 
-/**
- * Writes an OSC packet to a buffer. Returns the total number of bytes written.
- * The entire buffer is cleared before writing.
- */
-uint32_t writeMessage(char *buffer, const int len, const char *address,
-    const char *fmt, ...);
+
+
+
+  /// Parse messages and executes the callback.
+  //virtual void parseMessages(tOscCallbackFunction callback) = 0;
+
+private:
+  /// Sends the actual message.
+  //virtual void write() = 0;
 
 
 };
@@ -244,6 +266,8 @@ uint32_t writeMessage(char *buffer, const int len, const char *address,
  * to stdout.
  */
 //void tosc_printMessage(tosc_message *o);
+
+
 
 
 

@@ -18,8 +18,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include "TinySlip/TinySlip.h"
 
 #define TINYOSC_TIMETAG_IMMEDIATELY 1L
+
 
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -69,6 +71,7 @@
 #define htonll(x) htobe64(x)
 #define ntohll(x) be64toh(x)
 #endif
+
 #endif
 
 #include "TinyOsc.h"
@@ -170,7 +173,7 @@ TinyOsc::TinyOsc(){
 
 
 // http://opensoundcontrol.org/spec-1_0
-void TinyOsc::parse(char *buffer, const int len, tOscCallbackFunction callback) {
+void TinyOsc::parseOsc(char *buffer, const int len, tOscCallbackFunction callback) {
  
   if ( callback == NULL ) return; 
 
@@ -322,8 +325,6 @@ void TinyOsc::reset() {
   i = (i + 4) & ~0x3; // advance to the next multiple of 4 after trailing '\0'
   o->marker = o->format + i - 1; // -1 to account for ',' format prefix
 }
-
-
 
 
 bool TinyOsc::fullMatch(const char* address) {
